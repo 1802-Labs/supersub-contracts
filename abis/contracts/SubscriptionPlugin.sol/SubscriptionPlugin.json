@@ -1,17 +1,6 @@
 [
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "_bridge",
-        "type": "address"
-      }
-    ],
+    "inputs": [],
     "stateMutability": "nonpayable",
     "type": "constructor"
   },
@@ -166,12 +155,6 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "destinationChain",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
         "internalType": "bool",
         "name": "isActive",
         "type": "bool"
@@ -194,12 +177,6 @@
         "internalType": "address",
         "name": "receivingAddress",
         "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "destinationChain",
-        "type": "uint256"
       },
       {
         "indexed": false,
@@ -412,24 +389,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_chainId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint64",
-        "name": "_selector",
-        "type": "uint64"
-      }
-    ],
-    "name": "addChainSelector",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "admin",
     "outputs": [
@@ -558,11 +517,6 @@
         "internalType": "address",
         "name": "_receivingAddress",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_destinationChain",
-        "type": "uint256"
       }
     ],
     "name": "createProduct",
@@ -601,11 +555,6 @@
         "internalType": "address",
         "name": "_receivingAddress",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_destinationChain",
-        "type": "uint256"
       },
       {
         "components": [
@@ -658,11 +607,6 @@
         "type": "address"
       },
       {
-        "internalType": "uint256",
-        "name": "_destinationChain",
-        "type": "uint256"
-      },
-      {
         "internalType": "uint32",
         "name": "_chargeInterval",
         "type": "uint32"
@@ -681,19 +625,6 @@
     "name": "createRecurringPayment",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "currentChainId",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1337,11 +1268,6 @@
         "type": "address"
       },
       {
-        "internalType": "uint256",
-        "name": "destinationChain",
-        "type": "uint256"
-      },
-      {
         "internalType": "bool",
         "name": "isActive",
         "type": "bool"
@@ -1374,19 +1300,6 @@
       }
     ],
     "name": "runtimeValidationFunction",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_bridgeAddr",
-        "type": "address"
-      }
-    ],
-    "name": "setTokenBridge",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1526,11 +1439,6 @@
         "internalType": "address",
         "name": "_receivingAddr",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_destChain",
-        "type": "uint256"
       },
       {
         "internalType": "bool",

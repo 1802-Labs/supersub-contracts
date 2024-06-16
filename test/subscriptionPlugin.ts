@@ -14,7 +14,6 @@ describe('Subscription Plugin Tests', function () {
     const SingleOwnerPluginFactory = await hre.ethers.getContractFactory('SingleOwnerPlugin');
     const UpgradeableModularAccountFactory = await hre.ethers.getContractFactory('UpgradeableModularAccount');
     const ccipLocalSimulatorFactory = await hre.ethers.getContractFactory('CCIPLocalSimulator');
-    const ccipBridgeFactory = await hre.ethers.getContractFactory('SubscriptionTokenBridge');
     const bnmFactory = await hre.ethers.getContractFactory('BurnMintERC677Helper');
 
     const entrypoint = (await EntryPointFactory.deploy()) as unknown as IEntryPoint;
@@ -23,8 +22,7 @@ describe('Subscription Plugin Tests', function () {
     const ccipLocalSimulator = await ccipLocalSimulatorFactory.deploy();
     const ccipConfig = await ccipLocalSimulator.configuration();
     const ccipBnM = bnmFactory.attach(ccipConfig.ccipBnM_);
-    const tokenBridge = await ccipBridgeFactory.deploy(ccipConfig.sourceRouter_, ccipConfig.linkToken_, []);
-    const subscriptionPlugin = await SubscriptionPluginFactory.deploy(chainId, await tokenBridge.getAddress());
+    const subscriptionPlugin = await SubscriptionPluginFactory.deploy();
     const [beneficiary, mscaOwner] = await hre.ethers.getSigners();
     const mscaAccount = await UpgradeableModularAccountFactory.deploy(await entrypoint.getAddress());
     const pluginAddr = await singleOwnerPlugin.getAddress();
@@ -55,7 +53,6 @@ describe('Subscription Plugin Tests', function () {
       beneficiary,
       mscaOwner,
       mscaAccount,
-      tokenBridge,
       ccipLocalSimulator,
       ccipConfig,
       ccipBnM,
@@ -64,9 +61,7 @@ describe('Subscription Plugin Tests', function () {
 
   describe('Deployment Test', function () {
     it('Should set correct chain ID and token bridge', async () => {
-      const { subscriptionPlugin, tokenBridge } = await loadFixture(setUp);
-      expect(await subscriptionPlugin.currentChainId()).to.equal(chainId);
-      expect(await subscriptionPlugin.tokenBridge()).to.equal(await tokenBridge.getAddress());
+      const { subscriptionPlugin } = await loadFixture(setUp);
     });
   });
 
@@ -80,15 +75,7 @@ describe('Subscription Plugin Tests', function () {
       const beforeCreateProductNonce = await await subscriptionPlugin.productNonce();
       const txn = await subscriptionPlugin
         .connect(signer)
-        .createProduct(
-          productName,
-          'Test Product',
-          'https://product.img',
-          1,
-          tokenAddress,
-          reciepient.address,
-          chainId
-        );
+        .createProduct(productName, 'Test Product', 'https://product.img', 1, tokenAddress, reciepient.address);
       const afterCreateProductNonce = await subscriptionPlugin.productNonce();
 
       const product = await subscriptionPlugin.products(beforeCreateProductNonce);
@@ -97,7 +84,6 @@ describe('Subscription Plugin Tests', function () {
       expect(product.provider).to.equal(signer.address);
       expect(product.chargeToken).to.equal(tokenAddress);
       expect(product.receivingAddress).to.equal(reciepient.address);
-      expect(product.destinationChain).to.equal(chainId);
       expect(product.productId).to.equal(beforeCreateProductNonce);
       expect(product.isActive).to.equal(true);
       await expect(txn)
@@ -111,7 +97,6 @@ describe('Subscription Plugin Tests', function () {
           1,
           tokenAddress,
           reciepient.address,
-          chainId,
           true
         );
     });
@@ -128,8 +113,7 @@ describe('Subscription Plugin Tests', function () {
           'http://product.img',
           1,
           await token.getAddress(),
-          signer.address,
-          chainId
+          signer.address
         );
 
       const chargeInterval = 86400;
@@ -164,8 +148,7 @@ describe('Subscription Plugin Tests', function () {
           'http://product.img',
           1,
           await token.getAddress(),
-          signer.address,
-          chainId
+          signer.address
         );
       const chargeInterval = 86400;
       const price = BigInt(100) * BigInt(10) ** (await token.decimals());
@@ -173,17 +156,15 @@ describe('Subscription Plugin Tests', function () {
 
       // Update Product
       // Add new chain to list of supported destination chains
-      await subscriptionPlugin.connect(admin).addChainSelector(3, 456778);
       const txn1 = await subscriptionPlugin
         .connect(signer)
-        .updateProduct(1, '0xdAC17F958D2ee523a2206206994597C13D831ec7', 3, true);
+        .updateProduct(1, '0xdAC17F958D2ee523a2206206994597C13D831ec7', true);
       const product = await subscriptionPlugin.products(1);
       expect(product.receivingAddress).to.equal('0xdAC17F958D2ee523a2206206994597C13D831ec7');
-      expect(product.destinationChain).to.equal(3);
       expect(product.isActive).to.equal(true);
       await expect(txn1)
         .to.emit(subscriptionPlugin, 'ProductUpdated')
-        .withArgs(product.productId, '0xdAC17F958D2ee523a2206206994597C13D831ec7', 3, true);
+        .withArgs(product.productId, '0xdAC17F958D2ee523a2206206994597C13D831ec7', true);
 
       // Update Plan
       //const newPrice = BigInt(50) * BigInt(10) ** (await token.decimals());
@@ -201,7 +182,6 @@ describe('Subscription Plugin Tests', function () {
       const logoUrl = 'http://product.img';
       const tokenAddr = await token.getAddress();
       const recvAddr = mscaOwner.address;
-      const destChain = chainId;
 
       const userOp = {
         sender: await mscaAccount.getAddress(),
@@ -214,7 +194,6 @@ describe('Subscription Plugin Tests', function () {
           1,
           tokenAddr,
           recvAddr,
-          destChain,
         ]),
         callGasLimit: 700000,
         verificationGasLimit: 1000000,
@@ -239,28 +218,15 @@ describe('Subscription Plugin Tests', function () {
       expect(product.provider).to.equal(expectedProvider);
       expect(product.chargeToken).to.equal(tokenAddr);
       expect(product.receivingAddress).to.equal(recvAddr);
-      expect(product.destinationChain).to.equal(chainId);
       expect(product.productId).to.equal(expectedProductId);
       expect(product.isActive).to.equal(true);
       await expect(txn)
         .to.emit(subscriptionPlugin, 'ProductCreated')
-        .withArgs(
-          expectedProductId,
-          expectedProvider,
-          productName,
-          productDesc,
-          logoUrl,
-          1,
-          tokenAddr,
-          recvAddr,
-          chainId,
-          true
-        );
+        .withArgs(expectedProductId, expectedProvider, productName, productDesc, logoUrl, 1, tokenAddr, recvAddr, true);
 
       // Update Product
       // Allow new chain id selector
       const [admin] = await hre.ethers.getSigners();
-      await subscriptionPlugin.connect(admin).addChainSelector(10, 456778);
       const updateProductUserOp = {
         sender: await mscaAccount.getAddress(),
         nonce: 1,
@@ -268,7 +234,6 @@ describe('Subscription Plugin Tests', function () {
         callData: subscriptionPlugin.interface.encodeFunctionData('updateProduct', [
           expectedProductId,
           beneficiary.address,
-          10,
           false,
         ]),
         callGasLimit: 700000,
@@ -286,11 +251,10 @@ describe('Subscription Plugin Tests', function () {
       const updatedProduct = await subscriptionPlugin.products(expectedProductId);
       expect(updatedProduct.chargeToken).to.equal(await token.getAddress());
       expect(updatedProduct.receivingAddress).to.equal(beneficiary.address);
-      expect(updatedProduct.destinationChain).to.equal(10);
       expect(updatedProduct.isActive).to.equal(false);
       await expect(updateTxn)
         .to.emit(subscriptionPlugin, 'ProductUpdated')
-        .withArgs(product.productId, beneficiary.address, 10, false);
+        .withArgs(product.productId, beneficiary.address, false);
     });
     it('MSCA can create & Update plan', async () => {
       const { mscaAccount, mscaOwner, subscriptionPlugin, entrypoint, token, beneficiary } = await loadFixture(setUp);
@@ -307,7 +271,6 @@ describe('Subscription Plugin Tests', function () {
           1,
           await token.getAddress(),
           mscaOwner.address,
-          chainId,
         ]),
         callGasLimit: 700000,
         verificationGasLimit: 1000000,
@@ -410,7 +373,6 @@ describe('Subscription Plugin Tests', function () {
         1,
         await token.getAddress(),
         beneficiary.address,
-        chainId,
         plans
       );
       const product = await subscriptionPlugin.products(expectedProductId);
@@ -421,7 +383,6 @@ describe('Subscription Plugin Tests', function () {
       expect(product.provider).to.equal(provider.address);
       expect(product.chargeToken).to.equal(await token.getAddress());
       expect(product.receivingAddress).to.equal(beneficiary.address);
-      expect(product.destinationChain).to.equal(chainId);
       expect(product.isActive).to.equal(true);
       await expect(txn)
         .to.emit(subscriptionPlugin, 'ProductCreated')
@@ -434,7 +395,6 @@ describe('Subscription Plugin Tests', function () {
           1,
           await token.getAddress(),
           beneficiary.address,
-          chainId,
           true
         );
       for (const initPlan of plans) {
@@ -478,7 +438,6 @@ describe('Subscription Plugin Tests', function () {
         1,
         await token.getAddress(),
         beneficiary.address,
-        chainId,
         plans,
       ]);
       const userOp = {
@@ -506,7 +465,6 @@ describe('Subscription Plugin Tests', function () {
       expect(product.provider).to.equal(await mscaAccount.getAddress());
       expect(product.chargeToken).to.equal(await token.getAddress());
       expect(product.receivingAddress).to.equal(beneficiary.address);
-      expect(product.destinationChain).to.equal(chainId);
       expect(product.isActive).to.equal(true);
       await expect(txn)
         .to.emit(subscriptionPlugin, 'ProductCreated')
@@ -519,7 +477,6 @@ describe('Subscription Plugin Tests', function () {
           1,
           await token.getAddress(),
           beneficiary.address,
-          chainId,
           true
         );
       for (const initPlan of plans) {
@@ -551,7 +508,6 @@ describe('Subscription Plugin Tests', function () {
         logo,
         await token.getAddress(),
         beneficiary.address,
-        chainId,
         chargeInterval,
         endTime,
         price,
@@ -585,7 +541,6 @@ describe('Subscription Plugin Tests', function () {
       expect(product.provider).to.equal(await mscaAccount.getAddress());
       expect(product.chargeToken).to.equal(await token.getAddress());
       expect(product.receivingAddress).to.equal(beneficiary.address);
-      expect(product.destinationChain).to.equal(chainId);
       expect(product.isActive).to.equal(true);
       await expect(txn)
         .to.emit(subscriptionPlugin, 'ProductCreated')
@@ -598,7 +553,6 @@ describe('Subscription Plugin Tests', function () {
           0,
           await token.getAddress(),
           beneficiary.address,
-          chainId,
           true
         );
       const plan = await subscriptionPlugin.plans(expectedPlanId);
@@ -661,8 +615,7 @@ describe('Subscription Plugin Tests', function () {
           'http://product.img',
           1,
           await token.getAddress(),
-          mscaOwner.address,
-          chainId
+          mscaOwner.address
         );
       await subscriptionPlugin.connect(mscaOwner).createPlan(1, chargeInterval, price);
 
@@ -786,8 +739,7 @@ describe('Subscription Plugin Tests', function () {
           'http://product.img',
           1,
           await token.getAddress(),
-          signer.address,
-          chainId
+          signer.address
         );
       await subscriptionPlugin
         .connect(signer)
@@ -797,8 +749,7 @@ describe('Subscription Plugin Tests', function () {
           'http://product.img',
           1,
           await token.getAddress(),
-          signer.address,
-          chainId
+          signer.address
         ); // Product 2
       const price = BigInt(100) * BigInt(10) ** (await token.decimals());
       await subscriptionPlugin.connect(signer).createPlan(1, 86400, price);
@@ -872,8 +823,7 @@ describe('Subscription Plugin Tests', function () {
           'http://product.img',
           1,
           await token.getAddress(),
-          signer.address,
-          chainId
+          signer.address
         );
       const price = BigInt(100) * BigInt(10) ** (await token.decimals());
       const price2 = BigInt(200) * BigInt(10) ** (await token.decimals());
@@ -920,103 +870,6 @@ describe('Subscription Plugin Tests', function () {
       await expect(chargeTxn)
         .to.emit(subscriptionPlugin, 'SubscriptionCharged')
         .withArgs(await mscaAccount.getAddress(), signer.address, 0, 1, 1, price, afterChargeUserSub.lastChargeDate);
-    });
-    it('CCIP charge test', async () => {
-      const {
-        mscaAccount,
-        mscaOwner,
-        subscriptionPlugin,
-        entrypoint,
-        token,
-        beneficiary,
-        ccipConfig,
-        ccipLocalSimulator,
-        tokenBridge,
-        ccipBnM,
-      } = await loadFixture(setUp);
-
-      // Transfer tokens to the msca account and add token to ccip supported tokens
-      const amount = BigInt(1000) * BigInt(10) ** (await token.decimals());
-      await token.transfer(await mscaAccount.getAddress(), amount);
-      await ccipLocalSimulator.supportNewToken(await token.getAddress());
-
-      // ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-      // ┃    Create Product & Plan  ┃
-      // ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-      // Add a destination chain ID of 10 to supported chains
-      const [admin, signer] = await hre.ethers.getSigners();
-      await subscriptionPlugin.connect(admin).addChainSelector(10, ccipConfig.chainSelector_);
-      await tokenBridge.connect(admin).addDestinationChainSupport(ccipConfig.chainSelector_);
-      await subscriptionPlugin.connect(admin).setTokenBridge(await tokenBridge.getAddress());
-      await subscriptionPlugin
-        .connect(signer)
-        .createProduct(
-          hre.ethers.encodeBytes32String('Test Product'),
-          'Test product',
-          'http://product.img',
-          1,
-          await token.getAddress(),
-          signer.address,
-          10
-        );
-      const price = BigInt(100) * BigInt(10) ** (await token.decimals());
-      await subscriptionPlugin.connect(signer).createPlan(1, 86400, price);
-
-      // ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-      // ┃    Subscription Test      ┃
-      // ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-      const subscribeUserOp = {
-        sender: await mscaAccount.getAddress(),
-        nonce: 0,
-        initCode: '0x',
-        callData: subscriptionPlugin.interface.encodeFunctionData('subscribe', [1, 0]),
-        callGasLimit: 7000000,
-        verificationGasLimit: 1000000,
-        preVerificationGas: 0,
-        maxFeePerGas: 2,
-        maxPriorityFeePerGas: 1,
-        paymasterAndData: '0x',
-        signature: '0x',
-      };
-      const subscribeUserOpHash = await entrypoint.getUserOpHash(subscribeUserOp);
-      const subscribeSig = await mscaOwner.signMessage(hre.ethers.getBytes(subscribeUserOpHash));
-      subscribeUserOp.signature = subscribeSig;
-      const txn = await entrypoint.handleOps([subscribeUserOp], beneficiary.address);
-      await expect(txn)
-        .to.emit(subscriptionPlugin, 'Subscribed')
-        .withArgs(await mscaAccount.getAddress(), signer.address, 1, 1, 0, 0);
-      await expect(txn)
-        .to.emit(tokenBridge, 'TokenTransferred')
-        .withArgs(
-          anyValue,
-          ccipConfig.chainSelector_,
-          signer.address,
-          await token.getAddress(),
-          ccipConfig.linkToken_,
-          price,
-          anyValue,
-          0,
-          1
-        );
-
-      // ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-      // ┃    Charge Test            ┃
-      // ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-      await time.increase(86400);
-      const chargeTxn = await subscriptionPlugin.charge(await mscaAccount.getAddress(), 0);
-      await expect(chargeTxn)
-        .to.emit(tokenBridge, 'TokenTransferred')
-        .withArgs(
-          anyValue,
-          ccipConfig.chainSelector_,
-          signer.address,
-          await token.getAddress(),
-          ccipConfig.linkToken_,
-          price,
-          anyValue,
-          0,
-          1
-        );
     });
   });
 });
