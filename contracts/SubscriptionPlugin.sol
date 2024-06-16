@@ -103,7 +103,7 @@ contract SubscriptionPlugin is BasePlugin {
     );
     event SubscriptionEndTimeUpdated(address indexed subscriber, uint256 indexed id, uint256 endTime);
 
-    constructor( ) {
+    constructor() {
         admin = msg.sender;
         productNonce = 1;
         planNonce = 1;
@@ -238,14 +238,7 @@ contract SubscriptionPlugin is BasePlugin {
         InitPlanParam[] calldata _plans
     ) public {
         require(_plans.length != 0, "plans must not be empty");
-        uint256 productId = _createProduct(
-            _name,
-            _description,
-            _logoUrl,
-            _type,
-            _chargeToken,
-            _receivingAddress
-        );
+        uint256 productId = _createProduct(_name, _description, _logoUrl, _type, _chargeToken, _receivingAddress);
         for (uint i = 0; i < _plans.length; i++) {
             createPlan(productId, _plans[i].chargeInterval, _plans[i].price);
         }
@@ -362,7 +355,6 @@ contract SubscriptionPlugin is BasePlugin {
         bytes memory callData = abi.encodeCall(IERC20.transfer, (address(this), amount));
         IPluginExecutor(subscriber).executeFromPluginExternal(chargeToken, 0, callData);
         IERC20(chargeToken).transfer(receivingAddress, amount);
-
     }
 
     function charge(
@@ -398,7 +390,6 @@ contract SubscriptionPlugin is BasePlugin {
             userSubscription.lastChargeDate
         );
     }
-
 
     // ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
     // ┃    Plugin interface functions    ┃
