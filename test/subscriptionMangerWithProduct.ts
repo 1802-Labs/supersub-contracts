@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import hre from 'hardhat';
 import SubscriptionManager from '../ignition/modules/SubscriptionManager';
 
-describe('Subscription Manager', function () {
+describe('Subscription Manager With Products', function () {
   // We define a fixture to reuse the same setup in every test.
   // We use loadFixture to run this setup once, snapshot that state,
   // and reset Hardhat Network to that snapshot in every test.
@@ -19,10 +19,13 @@ describe('Subscription Manager', function () {
     const WETH = '0x5302086A3a25d473aAbBd0356eFf8Dd811a4d89B';
     const subscriptionManager = await SubscriptionManager.deploy(
       ['0xdAC17F958D2ee523a2206206994597C13D831ec7'],
+      [],
+      [],
       4,
       swapFactoryAddr,
       swapRouterAddr,
-      WETH
+      WETH,
+      '0xdAC17F958D2ee523a2206206994597C13D831ec7'
     );
 
     return {

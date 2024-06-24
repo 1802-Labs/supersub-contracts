@@ -38,6 +38,16 @@ const config: HardhatUserConfig = {
             chainId: 1,
             accounts: [process.env.PRIVATE_KEY_1!],
           },
+          baseSepolia: {
+            url: `https://base-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY!}`,
+            chainId: 84532,
+            accounts: [process.env.PRIVATE_KEY_3!],
+          },
+          arbitrumSepolia: {
+            url: `https://arb-sepolia.g.alchemy.com/v2${process.env.ALCHEMY_API_KEY!}`,
+            chainId: 1,
+            accounts: [process.env.PRIVATE_KEY_1!],
+          },
           polygonAmoy: {
             url: `https://polygon-amoy.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY!}`,
             chainId: 80002,

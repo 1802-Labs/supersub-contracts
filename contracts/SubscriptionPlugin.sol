@@ -328,9 +328,7 @@ contract SubscriptionPlugin is BasePlugin {
                 ccipChainSelectors[destinationChain],
                 receivingAddress,
                 chargeToken,
-                amount,
-                subId,
-                planId
+                amount
             );
         }
     }

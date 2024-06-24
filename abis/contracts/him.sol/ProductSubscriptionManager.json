@@ -246,7 +246,7 @@
       },
       {
         "indexed": true,
-        "internalType": "enum ProductSubscriptionManagerPlugin.ProductType",
+        "internalType": "enum ProductSubscriptionManager.ProductType",
         "name": "productType",
         "type": "uint8"
       },
@@ -501,7 +501,7 @@
         "type": "string"
       },
       {
-        "internalType": "enum ProductSubscriptionManagerPlugin.ProductType",
+        "internalType": "enum ProductSubscriptionManager.ProductType",
         "name": "productType",
         "type": "uint8"
       },
@@ -533,7 +533,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ProductSubscriptionManagerPlugin.UserSubscriptionParams[]",
+        "internalType": "struct ProductSubscriptionManager.UserSubscriptionParams[]",
         "name": "initPlans",
         "type": "tuple[]"
       }
@@ -578,7 +578,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct ProductSubscriptionManagerPlugin.UserSubscriptionParams",
+        "internalType": "struct ProductSubscriptionManager.UserSubscriptionParams",
         "name": "initPlan",
         "type": "tuple"
       },
@@ -1284,7 +1284,7 @@
     "name": "products",
     "outputs": [
       {
-        "internalType": "enum ProductSubscriptionManagerPlugin.ProductType",
+        "internalType": "enum ProductSubscriptionManager.ProductType",
         "name": "productType",
         "type": "uint8"
       },
@@ -1519,7 +1519,7 @@
     "name": "swapFactory",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "contract IUniswapV3Factory",
         "name": "",
         "type": "address"
       }
@@ -1532,7 +1532,7 @@
     "name": "swapRouter",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "contract ISwapRouter",
         "name": "",
         "type": "address"
       }
@@ -1545,7 +1545,7 @@
     "name": "tokenBridge",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "contract ITokenBridge",
         "name": "",
         "type": "address"
       }

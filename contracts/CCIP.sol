@@ -17,20 +17,16 @@ contract SubscriptionTokenBridge is OwnerIsCreator {
         address token,
         address feeToken,
         uint256 amount,
-        uint256 fees,
-        uint256 subscriptionId,
-        uint256 planId
+        uint256 fees
     );
 
     mapping(uint64 => bool) public allowedDestinationChains;
-    address public plugin;
     IRouterClient private router;
     IERC20 private linkToken;
 
-    constructor(address _router, address _link, address _plugin, uint64[] memory _supportedDestinationChains) {
+    constructor(address _router, address _link, uint64[] memory _supportedDestinationChains) {
         router = IRouterClient(_router);
         linkToken = IERC20(_link);
-        plugin = _plugin;
         for (uint i = 0; i < _supportedDestinationChains.length; i++) {
             allowedDestinationChains[_supportedDestinationChains[i]] = true;
         }
@@ -52,26 +48,25 @@ contract SubscriptionTokenBridge is OwnerIsCreator {
         uint256 _amount,
         address _feeToken
     ) private pure returns (Client.EVM2AnyMessage memory) {
+        
         Client.EVMTokenAmount[] memory tokenAmounts = new Client.EVMTokenAmount[](1);
         tokenAmounts[0] = Client.EVMTokenAmount({ token: _token, amount: _amount });
         return
             Client.EVM2AnyMessage({
                 receiver: abi.encode(_receiver),
-                data: "",
+                data: abi.encode(""),
                 tokenAmounts: tokenAmounts,
-                extraArgs: Client._argsToBytes(Client.EVMExtraArgsV1({ gasLimit: 0 })),
+                extraArgs: Client._argsToBytes(Client.EVMExtraArgsV1({ gasLimit: 100000 })),
                 feeToken: _feeToken
             });
     }
 
-    function _transferTokenPayNative(
+    function transferTokenPayNative(
         uint64 _chainSelector,
         address _receiver,
         address _token,
-        uint256 _amount,
-        uint256 _subId,
-        uint256 _planId
-    ) private {
+        uint256 _amount
+    ) public {
         // Build CCIP message
         Client.EVM2AnyMessage memory evm2AnyMessage = _buildCCIPMessage(
             _receiver,
@@ -82,23 +77,22 @@ contract SubscriptionTokenBridge is OwnerIsCreator {
         // Get the fee required to send the message
         uint256 fees = router.getFee(_chainSelector, evm2AnyMessage);
         require(address(this).balance > fees, "not enough native balance for fees");
-
+        // Caller should give the CCIP prior approval to spend tokens on its behalf
+        IERC20(_token).transferFrom(msg.sender, address(this), _amount);
         // Approve the router to spend contract tokens
         IERC20(_token).approve(address(router), _amount);
         bytes32 messageId = router.ccipSend{ value: fees }(_chainSelector, evm2AnyMessage);
 
-        emit TokenTransferred(messageId, _chainSelector, _receiver, _token, address(0), _amount, fees, _subId, _planId);
+        emit TokenTransferred(messageId, _chainSelector, _receiver, _token, address(0), _amount, fees);
     }
+
 
     function transferToken(
         uint64 _chainSelector,
         address _receiver,
         address _token,
-        uint256 _amount,
-        uint256 _subId,
-        uint256 _planId
-    ) public {
-        require(msg.sender == plugin, "unauthorized");
+        uint256 _amount
+    ) public isAllowedDestinationChain(_chainSelector) {
         // Build CCIP message
         Client.EVM2AnyMessage memory evm2AnyMessage = _buildCCIPMessage(
             _receiver,
@@ -107,15 +101,18 @@ contract SubscriptionTokenBridge is OwnerIsCreator {
             address(linkToken) // Pays fees in link token
         );
 
-        // Get the fee required to send the message
+        // // Get the fee required to send the message
         uint256 fees = router.getFee(_chainSelector, evm2AnyMessage);
-
         if (fees > linkToken.balanceOf(address(this))) {
             // Attempt to pay fees in native token if link balance is insufficient
-            _transferTokenPayNative(_chainSelector, _receiver, _token, _amount, _subId, _planId);
+            return transferTokenPayNative(_chainSelector, _receiver, _token, _amount);
         }
-        linkToken.approve(address(router), fees);
+        // linkToken.approve(address(router), fees);
+        // // Caller should give the CCIP prior approval to spend tokens on its behalf
+        IERC20(_token).transferFrom(msg.sender, address(this), _amount);
+        // // Approve ccip router to spend tokens from ccip contract
         IERC20(_token).approve(address(router), _amount);
+        linkToken.approve(address(router),fees);
         bytes32 messageId = router.ccipSend(_chainSelector, evm2AnyMessage);
         emit TokenTransferred(
             messageId,
@@ -124,9 +121,7 @@ contract SubscriptionTokenBridge is OwnerIsCreator {
             _token,
             address(linkToken),
             _amount,
-            fees,
-            _subId,
-            _planId
+            fees
         );
     }
 

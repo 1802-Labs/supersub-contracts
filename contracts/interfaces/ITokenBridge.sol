@@ -6,8 +6,6 @@ interface ITokenBridge {
         uint64 _chainSelector,
         address _receiver,
         address _token,
-        uint256 _amount,
-        uint256 _subId,
-        uint256 _planId
+        uint256 _amount
     ) external;
 }

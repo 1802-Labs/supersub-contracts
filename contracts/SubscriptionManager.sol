@@ -354,10 +354,9 @@ contract SubscriptionManagerPlugin is BasePlugin {
             tokenOut: _tokenOut,
             fee: fee,
             recipient: _recipient,
-            deadline: block.timestamp + 3,
             amountInMaximum: amountInMax,
             amountOut: amountOut,
-            limitSqrtPrice: 0
+            sqrtPriceLimitX96: 0
         });
         return abi.encodeCall(ISwapRouter.exactOutputSingle, (params)); //try to swap with all of balance first
     }

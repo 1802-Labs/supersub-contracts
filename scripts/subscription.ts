@@ -9,8 +9,9 @@ import {
   Wallet,
   zeroPadValue,
 } from 'ethers';
+import { abi as factoryABI } from '../artifacts/contracts/interfaces/IUniswapV3Factory.sol/IUniswapV3Factory.json';
 import { abi } from '../artifacts/contracts/SubscriptionManagerWithProducts.sol/ProductSubscriptionManagerPlugin.json';
-import { ALCHEMY_API_KEY, PRIVATE_KEY_1, PRIVATE_KEY_2 } from './main';
+import { ALCHEMY_API_KEY, PRIVATE_KEY_1, PRIVATE_KEY_2, PRIVATE_KEY_3 } from './main';
 
 function filterArrayInRange(array: number[], minValue: number, maxValue: number): number[] {
   return array.filter((num) => num >= minValue && num <= maxValue);
@@ -21,7 +22,7 @@ export class Subscription {
   address: Address;
   contract: Contract;
 
-  constructor(chain: string, address: Address) {
+  constructor(chain: Networkish, address: Address) {
     this.address = address;
     this.chain = chain;
     const provider = new AlchemyProvider(chain, ALCHEMY_API_KEY);
@@ -39,6 +40,25 @@ export class Subscription {
     return this.contract.interface.encodeFunctionResult('pluginManifest', [manifest]) as Address;
   }
 
+  async getV3PairAddress(factoryAddr: string, token0: string, token1: string) {
+    const provider = new AlchemyProvider(this.chain, ALCHEMY_API_KEY);
+    const feeRanges = [3000, 10000, 500, 100, 1000];
+    let pairAddress;
+    const factory = new Contract(factoryAddr, factoryABI, provider);
+
+    for (let i = 0; i < feeRanges.length; i++) {
+      const fee = feeRanges[i];
+      try {
+        pairAddress = await factory.getPool(token0, token1, fee);
+        console.log(pairAddress);
+      } catch (err) {}
+
+      if (pairAddress && pairAddress != '0x0000000000000000000000000000000000000000') return { pairAddress, fee };
+    }
+
+    return { pairAddress: undefined, fee: undefined };
+  }
+
   encodeCreateRecurringPaymentParams(
     productId: number,
     initPlans: {
@@ -52,14 +72,17 @@ export class Subscription {
       endTime: number;
       paymentToken: string;
       paymentTokenSwapFee: number;
+      description: string;
     }
   ) {
+    console.log(initPlans);
     return this.contract.interface.encodeFunctionData('createRecurringPayment', [
       productId,
       initPlans,
       subscribeParams.endTime,
       subscribeParams.paymentToken,
       subscribeParams.paymentTokenSwapFee,
+      subscribeParams.description,
     ]);
   }
 
@@ -121,11 +144,18 @@ export class Subscription {
     ]);
   }
 
-  encodeSubscribeFunctionParamas(planId: number, duration: number, paymentToken: string, paymentTokenSwapFee: number) {
+  encodeSubscribeFunctionParamas(
+    planId: number,
+    duration: number,
+    paymentToken: string,
+    beneficiary: string,
+    paymentTokenSwapFee: number
+  ) {
     return this.contract.interface.encodeFunctionData('subscribe', [
       planId,
       duration,
       paymentToken,
+      beneficiary,
       paymentTokenSwapFee,
     ]);
   }
@@ -134,12 +164,14 @@ export class Subscription {
     planId: number,
     endTime: number,
     paymentToken: string,
+    beneficiary: string,
     paymentTokenSwapFee: number
   ) {
     return this.contract.interface.encodeFunctionData('updateUserSubscription', [
       planId,
       endTime,
       paymentToken,
+      beneficiary,
       paymentTokenSwapFee,
     ]);
   }
@@ -151,7 +183,7 @@ export class Subscription {
   async charge(planId: number, subscriber: string) {
     const chain = this.chain;
     const provider = new AlchemyProvider(chain, ALCHEMY_API_KEY);
-    const signer = new Wallet(PRIVATE_KEY_2!, provider);
+    const signer = new Wallet(PRIVATE_KEY_3!, provider);
     const newContract = this.contract.connect(signer);
     //@ts-ignore
     await newContract.charge(planId, subscriber);
@@ -176,13 +208,19 @@ export class Subscription {
     const filteredNumbers = filterArrayInRange(numbers, minPlanId || 0, maxPlanId || numOfSubscription - 1);
 
     const subscriptions = await Promise.all(
-      filteredNumbers.map((number) => this.getUserSubscriptionByPlanId(subscriber, number))
+      filteredNumbers.map(async (number) => {
+        const data = await this.getUserSubscriptionByPlanId(subscriber, number);
+        return {
+          ...data,
+          planId: number,
+        };
+      })
     );
     return subscriptions;
   }
 
   async checkAddressSubscribedToPlan(subscriber: string, planId: number) {
-    return await this.contract.isSubscribedToPlan(planId, subscriber);
+    return await this.contract.hasSubscribedToPlan(planId, subscriber);
   }
 
   async getUserSubscriptionByPlanId(subscriber: string, planId: number) {

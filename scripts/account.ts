@@ -3,7 +3,7 @@ import { LocalAccountSigner, sepolia } from '@alchemy/aa-core';
 import { accountLoupeActions, pluginManagerActions } from '@alchemy/aa-accounts';
 import { Subscription } from './subscription';
 import { ACCOUNT_ABSTRATION_POLICY_ID, ALCHEMY_API_KEY } from './main';
-import { parseEther } from 'ethers';
+import { parseEther, ZeroAddress } from 'ethers';
 
 export class UserAccount {
   privateKey: string;
@@ -160,19 +160,11 @@ export class UserAccount {
     planId: number,
     endTime: number,
     paymentToken?: string,
+    beneficiary?: string,
     paymentTokenSwapFee: number = 0
   ) {
     const subscriptionPlan = await subscriptionManagerPlugin.getSubscriptionPlanById(planId);
-    if (!paymentToken) {
-      paymentToken = subscriptionPlan[5];
-      console.log(subscriptionPlan, paymentToken);
-    }
-    const subscribeParams = (await subscriptionManagerPlugin.encodeSubscribeFunctionParamas(
-      planId,
-      endTime,
-      paymentToken!,
-      paymentTokenSwapFee
-    )) as any;
+
     const accountClient = await this.initializeAccountClient();
     const isPluginInstalled = await this.isPluginInstalled(subscriptionManagerPlugin.address);
     console.log('Subscription Plugin installation status: ', isPluginInstalled);
@@ -180,6 +172,28 @@ export class UserAccount {
       await this.installSubscriptionPlugin(subscriptionManagerPlugin);
       console.log('Installed subscription Plugin');
     }
+    if (!beneficiary) {
+      beneficiary = accountClient.getAddress();
+    }
+    if (!paymentToken) {
+      paymentToken = subscriptionPlan[5];
+    } else {
+      if (paymentToken != subscriptionPlan[5]) {
+        const factory = await subscriptionManagerPlugin.contract.swapFactory();
+        console.log(factory);
+        paymentTokenSwapFee =
+          (await subscriptionManagerPlugin.getV3PairAddress(factory, subscriptionPlan[5], paymentToken)).fee || 0;
+      }
+    }
+
+    const subscribeParams = (await subscriptionManagerPlugin.encodeSubscribeFunctionParamas(
+      planId,
+      endTime,
+      paymentToken!,
+      beneficiary,
+      paymentTokenSwapFee
+    )) as any;
+
     console.log('subscribe params', subscribeParams);
     const userOp = await accountClient.sendUserOperation({ uo: subscribeParams });
     const hash = await accountClient.waitForUserOperationTransaction({ hash: userOp.hash });
@@ -191,11 +205,15 @@ export class UserAccount {
     planId: number,
     endTime?: number,
     paymentToken?: string,
+    beneficiary?: string,
     paymentTokenSwapFee: number = 0
   ) {
     const accountClient = await this.initializeAccountClient();
     const smartAccountAddress = accountClient.getAddress();
-    const subscription = await subscriptionManagerPlugin.getUserSubscriptionByPlanId(smartAccountAddress, planId);
+    if (!beneficiary) {
+      beneficiary = smartAccountAddress;
+    }
+    const subscription = await subscriptionManagerPlugin.getUserSubscriptionByPlanId(beneficiary, planId);
     if (!paymentToken) {
       paymentToken = subscription[3];
     }
@@ -206,6 +224,7 @@ export class UserAccount {
       planId,
       endTime,
       paymentToken!,
+      beneficiary,
       paymentTokenSwapFee
     ) as any;
     const isPluginInstalled = await this.isPluginInstalled(subscriptionManagerPlugin.address);
@@ -231,25 +250,45 @@ export class UserAccount {
     },
     endTime: number,
     paymentToken?: string,
-    paymentTokenSwapFee: number = 0
+    paymentTokenSwapFee: number = 0,
+    description?: string
   ) {
     if (!paymentToken) {
       paymentToken = initPlans.tokenAddress;
     }
+    if (paymentToken != initPlans.tokenAddress) {
+      let tokenB = initPlans.tokenAddress;
+      let tokenA = paymentToken;
+      if (paymentToken == ZeroAddress) {
+        tokenA = '0x4200000000000000000000000000000000000006'; //change to WETH by chain
+      }
+      if (initPlans.tokenAddress == ZeroAddress) {
+        tokenB = '0x4200000000000000000000000000000000000006';
+      }
+      const factory = await subscriptionManagerPlugin.contract.swapFactory();
+      paymentTokenSwapFee = (await subscriptionManagerPlugin.getV3PairAddress(factory, tokenA, tokenB)).fee || 0;
+      console.log('factory', factory, paymentToken, paymentTokenSwapFee);
+    }
+
     const accountClient = await this.initializeAccountClient();
     const recurringProductId = await subscriptionManagerPlugin.getProductForRecurringPayment(
       accountClient.getAddress()
     );
+    if (!description) {
+      description = `A recurring payment to ${initPlans.receivingAddress}`;
+    }
     const recurringPaymentParams = subscriptionManagerPlugin.encodeCreateRecurringPaymentParams(
       recurringProductId,
       initPlans,
-      { endTime, paymentToken, paymentTokenSwapFee }
+      { endTime, paymentToken, paymentTokenSwapFee, description }
     ) as `0x${string}`;
     const isPluginInstalled = await this.isPluginInstalled(subscriptionManagerPlugin.address);
     if (!isPluginInstalled) {
       await this.installSubscriptionPlugin(subscriptionManagerPlugin);
       console.log('Installed subscription Plugin');
     }
+    console.log(initPlans, recurringProductId);
+
     const userOp = await accountClient.sendUserOperation({ uo: recurringPaymentParams });
     const hash = await accountClient.waitForUserOperationTransaction({ hash: userOp.hash });
     console.log(hash, 'create Recurring txn gone');
