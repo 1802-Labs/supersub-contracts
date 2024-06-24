@@ -324,12 +324,7 @@ contract SubscriptionPlugin is BasePlugin {
             IERC20(chargeToken).transfer(receivingAddress, amount);
         } else {
             IERC20(chargeToken).transfer(address(tokenBridge), amount);
-            tokenBridge.transferToken(
-                ccipChainSelectors[destinationChain],
-                receivingAddress,
-                chargeToken,
-                amount
-            );
+            tokenBridge.transferToken(ccipChainSelectors[destinationChain], receivingAddress, chargeToken, amount);
         }
     }
 
