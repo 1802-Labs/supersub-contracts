@@ -549,7 +549,7 @@ contract ProductSubscriptionManagerPlugin is BasePlugin {
             userSubscription.paymentTokenSwapFee,
             recipient,
             plan.price,
-            ((tokenBalance * 80)/100)//use 80% of balance as max value
+            ((tokenBalance * 80) / 100) //use 80% of balance as max value
         );
         bytes memory returnData = IPluginExecutor(subscriber).executeFromPluginExternal(swapRouter, swapVal, callData);
         swapVal = abi.decode(returnData, (uint256));
