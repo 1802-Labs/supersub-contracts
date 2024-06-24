@@ -509,16 +509,16 @@ contract ProductSubscriptionManagerPlugin is BasePlugin {
         uint256 amountOut,
         uint256 amountInMax
     ) internal pure returns (bytes memory callData) {
-        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
+        ISwapRouter.ExactOutputSingleParams memory params = ISwapRouter.ExactOutputSingleParams({
             tokenIn: _tokenIn,
             tokenOut: _tokenOut,
             fee: fee,
             recipient: _recipient,
-            amountIn: amountInMax,
-            amountOutMinimum: 0,
+            amountOut: amountOut,
+            amountInMaximum: amountInMax,
             sqrtPriceLimitX96: 0
         });
-        return abi.encodeCall(ISwapRouter.exactInputSingle, (params)); //try to swap with all of balance first
+        return abi.encodeCall(ISwapRouter.exactOutputSingle, (params)); //try to swap with all of balance first
     }
 
     function executeSwap(
@@ -549,7 +549,7 @@ contract ProductSubscriptionManagerPlugin is BasePlugin {
             userSubscription.paymentTokenSwapFee,
             recipient,
             plan.price,
-            tokenBalance
+            ((tokenBalance * 80)/100)//use 80% of balance as max value
         );
         bytes memory returnData = IPluginExecutor(subscriber).executeFromPluginExternal(swapRouter, swapVal, callData);
         swapVal = abi.decode(returnData, (uint256));

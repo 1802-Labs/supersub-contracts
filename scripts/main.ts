@@ -33,7 +33,7 @@ export const PRIVATE_KEY_1 = process.env.PRIVATE_KEY_1;
 export const PRIVATE_KEY_2 = process.env.PRIVATE_KEY_2;
 export const PRIVATE_KEY_3 = process.env.PRIVATE_KEY_3;
 export const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY;
-export const accountSalt = 22;
+export const accountSalt = 23;
 const correspondingChain = baseSepolia;
 const chainId = correspondingChain.id;
 const subscription = new Subscription(chainId, subscriptionPluginAddr);
@@ -81,14 +81,19 @@ async function createRecurringPayment(chainId: Networkish) {
   const endTime = Math.floor(Date.now() / 1000) + duration;
   const initialPlans = [
     {
-      price: 1000,
+      price: 1000000000,
       chargeInterval: 24 * 3600 * 30,
-      tokenAddress: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+      tokenAddress: ZeroAddress,
       receivingAddress: '0x9d1bc836941319df22C3Dd9Ebba6EB1eE058b623',
       destinationChain: baseSepolia.id,
     },
   ];
-  await account.createRecurringPayment(subscription, initialPlans[0], endTime, ZeroAddress);
+  await account.createRecurringPayment(
+    subscription,
+    initialPlans[0],
+    endTime,
+    '0x036CbD53842c5426634e7929541eC2318f3dCF7e'
+  );
 }
 
 async function bridge() {

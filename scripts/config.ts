@@ -17,8 +17,8 @@ import { parseUnits, ZeroAddress } from 'ethers';
 export function getDeploymentAddressesByChain(name: string) {
   const dict = {
     baseSepolia: {
-      subscriptionPlugin: '0x70BF63040C4323a85B9D3D82b2e3568D91A0974D',
-      tokenBridge: '0x8619b4415bd9243269A470b91388aDC39161a942',
+      subscriptionPlugin: '0x7b5F4a4aB2E879a0dAB3B678D84a2832c6FB7f78',
+      tokenBridge: '0x8877bd8D5F89FAeDf7f189Bb3f9aAF5ab32B5862',
       initBlock: 1,
     },
     polygonAmoy: {
