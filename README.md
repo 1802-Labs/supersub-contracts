@@ -69,7 +69,7 @@ The plugin allows service providers to accept subscription on other chains using
 ### Installation
 
 - Clone the repository
-- cd pantra-contracts
+- `cd supersub-contracts`
 - Install dependencies: `npm install`
 
 ### Testing
