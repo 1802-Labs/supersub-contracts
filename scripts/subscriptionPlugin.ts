@@ -2,7 +2,7 @@ import { Address, BatchUserOperationCallData, UserOperationCallData } from '@alc
 import { AlchemyProvider, Contract, Interface, Networkish, Wallet, ZeroAddress } from 'ethers';
 import { AlchemySmartAccountClient, createModularAccountAlchemyClient } from '@alchemy/aa-alchemy';
 import { accountLoupeActions } from '@alchemy/aa-accounts';
-import { LocalAccountSigner, polygonAmoy } from '@alchemy/aa-core';
+import { LocalAccountSigner, polygonAmoy, baseSepolia } from '@alchemy/aa-core';
 import { abi } from '../artifacts/contracts/SubscriptionPlugin.sol/SubscriptionPlugin.json';
 import { abi as bridgeAbi } from '../artifacts/contracts/CCIP.sol/SubscriptionTokenBridge.json';
 import { SubscriptionPlugin, SubscriptionTokenBridge } from '../typechain-types';
@@ -301,64 +301,83 @@ class PluginClient {
 }
 
 const main = async () => {
-  const subscriptionPluginAddr: Address = '0x37604f45111AB488aeC38DBb17F90Ef1CC90cc32';
-  const oldPluginAddr: Address = '0xc0d50057A3a174267Ed6a95E7b1E4A7C7Df3D390';
-  const ccipBridgeAddr: Address = '0x28689f559337a8851b53ab5f3e0ddd39e5d145eb';
+  const amoyPluginAddr: Address = '0x37604f45111AB488aeC38DBb17F90Ef1CC90cc32';
+  const baseSepoliaPluginAddr: Address = '0xFcA69B9033C414cBCfa24b30228376fd040b70B2';
+  const amoyBridgeAddr: Address = '0x28689f559337a8851b53ab5f3e0ddd39e5d145eb';
+  const baseSepoliaBridgeAddr: Address = '0xD62BfbF2050e8fEAD90e32558329D43A6efce4C8';
   const PRIVATE_KEY = process.env.PRIVATE_KEY_1;
   const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY;
   const accountSalt = 13;
-  const ACCOUNT_ABSTRATION_POLICY_ID = process.env.ACCOUNT_ABSTRATION_POLICY_ID;
-  const provider = new AlchemyProvider('matic-amoy', ALCHEMY_API_KEY);
-  const signer = new Wallet(PRIVATE_KEY!, provider);
+  const AMOY_AA_POLICY_ID = process.env.AMOY_AA_POLICY_ID;
+  const BASE_SEPOLIA_AA_POLICY_ID = process.env.BASE_SEPOLIA_AA_POLICY_ID;
+  const amoyProvider = new AlchemyProvider('matic-amoy', ALCHEMY_API_KEY);
+  const baseSepoliaProvider = new AlchemyProvider('base-sepolia', ALCHEMY_API_KEY);
+  const amoySigner = new Wallet(PRIVATE_KEY!, amoyProvider);
+  const baseSepoliaSigner = new Wallet(PRIVATE_KEY!, baseSepoliaProvider);
   const amoyChainId = 80002;
-  const sepoliaChainId = 11155111;
+  const baseSepoliaChainId = 84532;
+  const baseSepoliaChainSelector = '10344971235874465080';
+  const sepoliaChainId = '11155111';
+  const sepoliaChainSelector = '16015286601757825753';
   const optimismSepoliaChainID = '69';
   const optimismSepoliaChainSelector = '5224473277236331295';
   const fujiChainId = '43113';
   const fujiChainSelector = '14767482510784806043';
   const usdcDecimals = 6;
   const linkDecimals = 18;
-  const usdcAddr = '0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582';
-  const linkAddr = '0x0Fd9e8d3aF1aaee056EB9e802c3A762a667b1904';
+  const amoyUsdcAddr = '0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582';
+  const amoyLinkAddr = '0x0Fd9e8d3aF1aaee056EB9e802c3A762a667b1904';
+  const baseSepoliaUsdcAddr = '0x036CbD53842c5426634e7929541eC2318f3dCF7e';
+  const baseSepoliaLinkAddr = '0xE4aB69C077896252FAFBD49EFD26B5D171A32410';
   const reciepient = '0xF65330dC75e32B20Be62f503a337cD1a072f898f';
+
+
   const smartAccount = await createModularAccountAlchemyClient({
     apiKey: ALCHEMY_API_KEY!,
-    chain: polygonAmoy,
+    chain: baseSepolia,
     //@ts-ignore
     signer: LocalAccountSigner.privateKeyToAccountSigner(PRIVATE_KEY),
     salt: BigInt(accountSalt || 0),
     gasManagerConfig: {
-      policyId: ACCOUNT_ABSTRATION_POLICY_ID!,
+      policyId: BASE_SEPOLIA_AA_POLICY_ID!,
     },
   });
   const client = new PluginClient(
-    polygonAmoy,
-    subscriptionPluginAddr,
+    baseSepolia,
+    baseSepoliaPluginAddr,
     abi,
-    ccipBridgeAddr,
+    baseSepoliaBridgeAddr,
     bridgeAbi,
     //@ts-ignore
     smartAccount,
-    provider,
-    signer
+    baseSepoliaProvider,
+    baseSepoliaSigner
   );
+
+  // const addr = smartAccount.account.address;
+  // console.log(addr);
   // await client.sendToken(
   //   ZeroAddress,
   //   '0x454082dcfa29f386ef348e13d636748a91567749',
   //   client.formatPrice(1, 16)
   // )
-  //console.log(await client.pluginContract.ccipChainSelectors(fujiChainId));
-  //await client.pluginContract.connect(signer).addChainSelector(BigInt(optimismSepoliaChainID), BigInt(optimismSepoliaChainSelector));
-  //await client.pluginContract.connect(signer).addChainSelector(BigInt(fujiChainId), BigInt(fujiChainSelector));
-  //await client.installPlugin();
+  // await client.pluginContract.connect(baseSepoliaSigner).addChainSelector(BigInt(sepoliaChainId), BigInt(sepoliaChainSelector));
+  // await client.pluginContract.connect(baseSepoliaSigner).addChainSelector(BigInt(optimismSepoliaChainID), BigInt(optimismSepoliaChainSelector));
+  // await client.pluginContract.connect(baseSepoliaSigner).addChainSelector(BigInt(fujiChainId), BigInt(fujiChainSelector));
+  // console.log(await client.pluginContract.ccipChainSelectors(sepoliaChainId));
+  // console.log(await client.pluginContract.ccipChainSelectors(optimismSepoliaChainID));
+  // console.log(await client.pluginContract.ccipChainSelectors(fujiChainId));
+
+  // await client.installPlugin();
+  
   // Product ID -> 1
   // await client.createProductWithPlans(
   //   'YT Nigeria',
   //   'Share your videos with friends, family, and the world',
   //   'https://t3.ftcdn.net/jpg/05/07/46/84/240_F_507468479_HfrpT7CIoYTBZSGRQi7RcWgo98wo3vb7.jpg',
-  //   linkAddr,
+  //   baseSepoliaLinkAddr,
   //   reciepient,
-  //   amoyChainId,
+  //   baseSepoliaChainId,
   //   [
   //     {// PlanID --> 1
   //       price: 1,
@@ -371,18 +390,20 @@ const main = async () => {
   //   ],
   //   linkDecimals - 1
   // );
+
   // await client.createRecurringPayment( // ProductID --> 2 & Subscription 0
   //   "Debt repayment",
   //   "Monthly debt repayment for eniola",
   //   "https://amoy.polygonscan.com/assets/poly/images/svg/logos/logo-dim.svg?v=24.5.4.0",
-  //   linkAddr,
+  //   baseSepoliaUsdcAddr,
   //   2592000,
-  //   1725588639,
+  //   0,
   //   reciepient,
-  //   amoyChainId,
+  //   baseSepoliaChainId,
   //   5,
-  //   linkDecimals - 1
+  //   usdcDecimals - 1
   // );
+
   // await client.createProduct( // Product ID --> 3
   //   "YT Music Nigeria",
   //   "A new music service with official albums, singles, videos, remixes, live performances and more for Android, iOS and desktop. It's all here.",
