@@ -103,10 +103,10 @@ export const deploymentVariablesDict = {
       swapRouterAddr: ZeroAddress,
       swapFactoryAddr: ZeroAddress,
       bridgingChainID: [],
-      cciprouter: '',
+      cciprouter: ZeroAddress,
       ccipChainSelector: [],
       link: '0x779877A7B0D9E8603169DdbD7836e478b4624789',
-      tokenBridge: '',
+      tokenBridge: ZeroAddress,
       WETH: '0xfc00000000000000000000000000000000000006',
     },
     optimism: {
