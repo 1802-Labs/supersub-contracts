@@ -13,7 +13,11 @@ const SubscriptionPluginModule = buildModule('SubscriptionPluginModule', (m) => 
     '16015286601757825753', // Ethereum Sepolia
     '5224473277236331295', // Optimism
   ];
-  const baseSepoliaCCIPBridge = m.contract('SubscriptionTokenBridge', [baseSepoliaCCIPRouter, baseSepoliaLink, baseSepoliaDestinationChains]);
+  const baseSepoliaCCIPBridge = m.contract('SubscriptionTokenBridge', [
+    baseSepoliaCCIPRouter,
+    baseSepoliaLink,
+    baseSepoliaDestinationChains,
+  ]);
   const baseSepoliaSubscriptionPlugin = m.contract('SubscriptionPlugin', [baseSepoliaChainId, baseSepoliaCCIPBridge]);
   return { baseSepoliaCCIPBridge, baseSepoliaSubscriptionPlugin };
 });

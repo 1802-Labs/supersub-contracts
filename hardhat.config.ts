@@ -63,35 +63,36 @@ const config: HardhatUserConfig = {
             url: 'https://sepolia.base.org',
             chainId: 84532,
             accounts: [process.env.PRIVATE_KEY!],
-          }
+          },
         }
       : undefined,
-  etherscan: process.env.POLYGON_AMOY_EXPLORER_API_KEY && process.env.BASE_SEPOLIA_EXPLORER_API_KEY
-    ? {
-        customChains: [
-          {
-            network: 'polygonAmoy',
-            chainId: 80002,
-            urls: {
-              apiURL: 'https://api-amoy.polygonscan.com/api',
-              browserURL: 'https://amoy.polygonscan.com/',
+  etherscan:
+    process.env.POLYGON_AMOY_EXPLORER_API_KEY && process.env.BASE_SEPOLIA_EXPLORER_API_KEY
+      ? {
+          customChains: [
+            {
+              network: 'polygonAmoy',
+              chainId: 80002,
+              urls: {
+                apiURL: 'https://api-amoy.polygonscan.com/api',
+                browserURL: 'https://amoy.polygonscan.com/',
+              },
             },
-          },
-          {
-            network: 'baseSepolia',
-            chainId: 84532,
-            urls: {
-              apiURL: 'https://sepolia-explorer.base.org/api',
-              browserURL: 'https://sepolia-explorer.base.org',
+            {
+              network: 'baseSepolia',
+              chainId: 84532,
+              urls: {
+                apiURL: 'https://sepolia-explorer.base.org/api',
+                browserURL: 'https://sepolia-explorer.base.org',
+              },
             },
+          ],
+          apiKey: {
+            polygonAmoy: process.env.POLYGON_AMOY_EXPLORER_API_KEY!,
+            baseSepolia: process.env.BASE_SEPOLIA_EXPLORER_API_KEY!,
           },
-        ],
-        apiKey: {
-          polygonAmoy: process.env.POLYGON_AMOY_EXPLORER_API_KEY!,
-          baseSepolia: process.env.BASE_SEPOLIA_EXPLORER_API_KEY!
-        },
-      }
-    : undefined,
+        }
+      : undefined,
   sourcify: {
     enabled: true,
   },
