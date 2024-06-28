@@ -331,7 +331,6 @@ const main = async () => {
   const baseSepoliaLinkAddr = '0xE4aB69C077896252FAFBD49EFD26B5D171A32410';
   const reciepient = '0xF65330dC75e32B20Be62f503a337cD1a072f898f';
 
-
   const smartAccount = await createModularAccountAlchemyClient({
     apiKey: ALCHEMY_API_KEY!,
     chain: baseSepolia,
@@ -369,7 +368,7 @@ const main = async () => {
   // console.log(await client.pluginContract.ccipChainSelectors(fujiChainId));
 
   // await client.installPlugin();
-  
+
   // Product ID -> 1
   // await client.createProductWithPlans(
   //   'YT Nigeria',
