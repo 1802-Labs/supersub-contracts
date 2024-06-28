@@ -59,9 +59,14 @@ const config: HardhatUserConfig = {
             chainId: 80002,
             accounts: [process.env.PRIVATE_KEY!],
           },
+          baseSepolia: {
+            url: 'https://sepolia.base.org',
+            chainId: 84532,
+            accounts: [process.env.PRIVATE_KEY!],
+          }
         }
       : undefined,
-  etherscan: process.env.POLYGON_AMOY_EXPLORER_API_KEY
+  etherscan: process.env.POLYGON_AMOY_EXPLORER_API_KEY && process.env.BASE_SEPOLIA_EXPLORER_API_KEY
     ? {
         customChains: [
           {
@@ -72,9 +77,18 @@ const config: HardhatUserConfig = {
               browserURL: 'https://amoy.polygonscan.com/',
             },
           },
+          {
+            network: 'baseSepolia',
+            chainId: 84532,
+            urls: {
+              apiURL: 'https://sepolia-explorer.base.org/api',
+              browserURL: 'https://sepolia-explorer.base.org',
+            },
+          },
         ],
         apiKey: {
           polygonAmoy: process.env.POLYGON_AMOY_EXPLORER_API_KEY!,
+          baseSepolia: process.env.BASE_SEPOLIA_EXPLORER_API_KEY!
         },
       }
     : undefined,
