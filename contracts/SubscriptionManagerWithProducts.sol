@@ -415,6 +415,7 @@ contract ProductSubscriptionManagerPlugin is BasePlugin {
     //To-Do
     //Bridging Provider should handle swapping and bridging to destination chain
     //should also handle native ETH withdrawal on same chain. Swapping only gives WETH
+    //beneficiary neccesarily doesn;t need to be an address but can be a bytes32 identifier
     function charge(uint256 planId, address beneficiary) public isActivePlan(planId) {
         require(hasSubscribedToPlan(planId, beneficiary), "User not subscribed to plan");
         SubscriptionPlan memory plan = subscriptionPlans[planId];
