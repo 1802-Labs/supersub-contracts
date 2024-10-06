@@ -303,6 +303,8 @@ contract ProductSubscriptionManagerPlugin is BasePlugin {
         emit PlanUpdated(planId, receivingAddress, destinationChain, isActive);
     }
 
+    //To-Do 
+    //Subscribe should consider if user unscubscribed previously
     function subscribe(
         uint256 planId,
         uint256 endTime,
@@ -410,6 +412,9 @@ contract ProductSubscriptionManagerPlugin is BasePlugin {
         emit PlanUnsubscribed(planId, beneficiary);
     }
 
+    //To-Do
+    //Bridging Provider should handle swapping and bridging to destination chain
+    //should also handle native ETH withdrawal on same chain. Swapping only gives WETH
     function charge(uint256 planId, address beneficiary) public isActivePlan(planId) {
         require(hasSubscribedToPlan(planId, beneficiary), "User not subscribed to plan");
         SubscriptionPlan memory plan = subscriptionPlans[planId];
