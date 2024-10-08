@@ -303,7 +303,7 @@ contract ProductSubscriptionManagerPlugin is BasePlugin {
         emit PlanUpdated(planId, receivingAddress, destinationChain, isActive);
     }
 
-    //To-Do 
+    //To-Do
     //Subscribe should consider if user unscubscribed previously
     function subscribe(
         uint256 planId,
