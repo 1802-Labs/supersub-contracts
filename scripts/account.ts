@@ -67,8 +67,6 @@ export class UserAccount {
       destinationChain: number;
     }[]
   ) {
-    const currentProductId = await subscriptionManagerPlugin.getTotalProducts();
-    console.log(currentProductId);
     const isPluginInstalled = await this.isPluginInstalled(subscriptionManagerPlugin.address);
     console.log('Subscription Plugin installation status: ', isPluginInstalled);
     if (!isPluginInstalled) {

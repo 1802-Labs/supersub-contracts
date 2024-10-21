@@ -42,7 +42,7 @@ const config: HardhatUserConfig = {
           baseSepolia: {
             url: `https://base-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY!}`,
             chainId: 84532,
-            accounts: [process.env.PRIVATE_KEY_3!],
+            accounts: [process.env.PRIVATE_KEY_1!],
           },
           arbitrumSepolia: {
             url: `https://arb-sepolia.g.alchemy.com/v2${process.env.ALCHEMY_API_KEY!}`,
