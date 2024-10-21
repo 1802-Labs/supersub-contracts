@@ -171,12 +171,12 @@ async function updateSubscription(chainId: Networkish) {
 
 // createRecurringPayment(chainId); //0xee558a9391ab56f59c933056c35044573caeb4f63928efb4cdb14cd6a50bb8e4 tx hash of create Recurring Payment
 
-// createProduct(chainId); //0xa442fa1f006f09f4f975b6d80f193340062692c29343182e4599771a6e6e02a3 tx hash of product and plan creation(check on polygonscan yourself)
+createProduct(chainId); //0xa442fa1f006f09f4f975b6d80f193340062692c29343182e4599771a6e6e02a3 tx hash of product and plan creation(check on polygonscan yourself)
 // main();
 //First subscribe txnHash 0x763cda5150e6b7068c10bb88f8c205f83449a274fcd946ff3e09e55524d5eb67 of subscription
 //Second subscribe txnHash 0xd6dd75b4432c866c8952237b49c3f304ee8e7a0ab06422e9a04addac1992cc00
 
-charge(chainId); //https://amoy.polygonscan.com/tx/0x681b4e921981fd2ad7c338fae780f74e7017c54a3e826179c9127e3443266460 (charge with native token)
+// charge(chainId); //https://amoy.polygonscan.com/tx/0x681b4e921981fd2ad7c338fae780f74e7017c54a3e826179c9127e3443266460 (charge with native token)
 // unsubscribe();
 //old adresss
 // 0x8cda78ab26ab7e06dae01972a9d47b4ce0f673e1dc16671750fa8155d827cde4 charged in USDC token
